@@ -10,8 +10,9 @@ let height = window.innerHeight;
 //-- GUI PARAMETERS
 var gui;
 const parameters = {
-  resolutionX: 3,
-  rotationX: 100
+  Height: 75,
+  PositionX: 25,
+  PositionY: 25,
 }
 
 //-- SCENE VARIABLES
@@ -26,19 +27,21 @@ var directionalLight;
 //-- GEOMETRY PARAMETERS
 //Create an empty array for storing all the cubes
 let sceneCubes = [];
-let resX = parameters.resolutionX;
-let rotX = parameters.rotationX;
+let lastHeight = parameters.Height;
+let lastPosX = parameters.PositionX;
+let lastPosY = parameters.PositionY;
 
 function main(){
   //GUI
   gui = new GUI;
-  gui.add(parameters, 'resolutionX', 1, 10, 1);
-  gui.add(parameters, 'rotationX', 0, 180);
+  gui.add(parameters, 'Height', 0, 300, 1);
+  gui.add(parameters, 'PositionX', 0, 49, 1);
+  gui.add(parameters, 'PositionY', 0, 49, 1);
 
   //CREATE SCENE AND CAMERA
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera( 15, width / height, 0.1, 100);
-  camera.position.set(10, 10, 10)
+  camera = new THREE.PerspectiveCamera( 15, width / height, 0.1, 5000);
+  camera.position.set(300, 300, 300)
 
   //LIGHTINGS
   ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -52,8 +55,8 @@ function main(){
 
   //GEOMETRY INITIATION
   // Initiate first cubes
-  createCubes();
-  rotateCubes();
+  createCubes(50,50);
+
 
   //RESPONSIVE WINDOW
   window.addEventListener('resize', handleResize);
@@ -77,30 +80,26 @@ function main(){
 //-----------------------------------------------------------------------------------
 //GEOMETRY FUNCTIONS
 // Create Cubes
-function createCubes(){
-  for(let i=0; i<resX; i++){
-    const geometry = new THREE.BoxGeometry(0.1, 1,1);
-    const material = new THREE.MeshPhysicalMaterial();
-    material.color = new THREE.Color(0xffffff);
-    material.color.setRGB(0,0,Math.random());
+function createCubes(x,y){
 
+    const geometry = new THREE.BoxGeometry(0.8 , 0.8, 0.8);
+    const material = new THREE.MeshPhysicalMaterial();
+    material.color = new THREE.Color(Math.random() * 0xffffff);
     const cube = new THREE.Mesh(geometry, material);
-    cube.position.set(i*0.1, 0, 0);
-    cube.name = "cube " + i;
+
+    cube.position.set(x, parameters.Height/((Math.abs(x-parameters.PositionX))+Math.abs((y-parameters.PositionY))/2+3), y);
+    cube.name = "cube " + x + y;
     sceneCubes.push(cube);
 
     scene.add(cube);
-  }
-}
+    
 
-//Rotate Cubes
-function rotateCubes(){
-  sceneCubes.forEach((element, index)=>{
-    let scene_cube = scene.getObjectByName(element.name);
-    let radian_rot = (index*(rotX/resX)) * (Math.PI/180);
-    scene_cube.rotation.set(radian_rot, 0, 0)
-    rotX = parameters.rotationX;
-  })
+if (x>0){
+  createCubes(x-1,y);
+}
+else if(y>0){
+  createCubes(50,y-1)
+}
 }
 
 //Remove 3D Objects and clean the caches
@@ -125,8 +124,10 @@ function removeObject(sceneObject){
 
 //Remove the cubes
 function removeCubes(){
-  resX = parameters.resolutionX;
-  rotX = parameters.rotationX;
+  lastHeight = parameters.Height;
+  lastPosX = parameters.PositionX;
+  lastPosY = parameters.PositionY;
+
 
   sceneCubes.forEach(element =>{
     let scene_cube = scene.getObjectByName(element.name);
@@ -153,15 +154,13 @@ function animate() {
  
   control.update();
 
-  if(resX != parameters.resolutionX){
+  if(lastHeight != parameters.Height || lastPosX != parameters.PositionX || lastPosY != parameters.PositionY){
     removeCubes();
-    createCubes();
-    rotateCubes();
+    createCubes(50,50);
+
   }
 
-  if (rotX != parameters.rotationX){
-    rotateCubes();
-  }
+
  
 	renderer.render( scene, camera );
 }
